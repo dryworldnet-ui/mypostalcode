@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes header-gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.header-moving-gradient {
+  background: linear-gradient(
+    110deg,
+    #14532d,
+    #166534,
+    #22c55e,
+    #15803d,
+    #166534,
+    #14532d
+  );
+  background-size: 300% 100%;
+  animation: header-gradient 45s ease infinite;
+}
+
+/* Background circle decorations */
+.bg-circles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+}
+.bg-circle--solid {
+  background: rgba(167, 243, 208, 0.2);
+  border: none;
+}
+.bg-circle--dashed {
+  background: transparent;
+  border: 2px dashed rgba(34, 197, 94, 0.3);
+}
+.bg-circle--gradient {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.22), rgba(249, 115, 22, 0.18));
+  border: none;
+}
+.bg-circle--gradient-dashed {
+  background: transparent;
+  border: 2px dashed rgba(251, 146, 60, 0.35);
+}
+.bg-circle--green-gradient {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.22), rgba(34, 197, 94, 0.18));
+  border: none;
+}
+.bg-circle--dotted {
+  background: transparent;
+  border: 2px dotted rgba(34, 197, 94, 0.35);
+}
+.bg-circle-1 { left: -18%; top: 8%; width: 42vmin; height: 42vmin; }
+.bg-circle-2 { left: -12%; bottom: 25%; width: 38vmin; height: 38vmin; }
+.bg-circle-3 { right: -22%; top: 15%; width: 48vmin; height: 48vmin; }
+.bg-circle-4 { right: -15%; top: 50%; width: 35vmin; height: 35vmin; }
+.bg-circle-5 { right: -8%; bottom: 10%; width: 40vmin; height: 40vmin; }
+.bg-circle-6 { left: -10%; top: 55%; width: 32vmin; height: 32vmin; }
+.bg-circle-7 { left: 5%; top: 35%; width: 28vmin; height: 28vmin; }
+.bg-circle-8 { right: 2%; top: 70%; width: 36vmin; height: 36vmin; }
+.bg-circle-9 { left: -8%; bottom: 5%; width: 44vmin; height: 44vmin; }
+.bg-circle-10 { right: -28%; top: 40%; width: 52vmin; height: 52vmin; }
+.bg-circle-11 { left: 15%; top: 75%; width: 30vmin; height: 30vmin; }
+.bg-circle-12 { right: 10%; bottom: 30%; width: 26vmin; height: 26vmin; }
+.bg-circle-13 { left: -25%; top: 14%; width: 55vmin; height: 55vmin; }
+.bg-circle-14 { left: -15%; top: 22%; width: 50vmin; height: 50vmin; }
+.bg-circle-15 { left: -20%; top: 18%; width: 48vmin; height: 48vmin; }
+.bg-circle-16 { right: -28%; top: 28%; width: 56vmin; height: 56vmin; }
+.bg-circle-17 { right: -18%; top: 34%; width: 52vmin; height: 52vmin; }
+.bg-circle-18 { right: -22%; top: 30%; width: 50vmin; height: 50vmin; }
+.bg-circle-19 { left: -5%; top: 5%; width: 38vmin; height: 38vmin; }
+.bg-circle-20 { left: 25%; top: 8%; width: 32vmin; height: 32vmin; }
+.bg-circle-21 { right: 15%; top: 6%; width: 36vmin; height: 36vmin; }
+.bg-circle-22 { left: 40%; top: 3%; width: 28vmin; height: 28vmin; }
+.bg-circle-23 { right: -8%; top: 10%; width: 42vmin; height: 42vmin; }
+.bg-circle-24 { left: 8%; top: 12%; width: 30vmin; height: 30vmin; }

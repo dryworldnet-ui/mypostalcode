@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>South African Postal Code Search | Find Zip Codes</title>
+    <meta name="description" content="Search for South African postal codes by area, city, or code. Find accurate zip code information for all regions in South Africa." />
+    <meta property="og:title" content="South African Postal Code Search | MyZipCode.co.za" />
+    <meta property="og:description" content="Search for South African postal codes by area, city, or code. Find accurate zip code information for all regions." />
+    <meta property="og:image" content="https://myzipcode.co.za/icon.png" />
+    <meta property="og:url" content="https://myzipcode.co.za/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="South African Postal Code Search | MyZipCode.co.za" />
+    <meta name="twitter:description" content="Search for South African postal codes by area, city, or code." />
+    <meta name="twitter:image" content="https://myzipcode.co.za/icon.png" />
+  </head>
+  <body>
+    <div id="root">
+      <p style="padding:2rem;text-align:center;color:#64748b;">Redirecting to postal code search…</p>
+    </div>
+    <script>
+      // Use JSON-based search (no Supabase). Redirect so search shows results.
+      if (!window.location.pathname.includes('postal-code-search')) {
+        window.location.replace('/postal-code-search.html');
+      }
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

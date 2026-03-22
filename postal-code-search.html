@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<!--
+  South African Postal Code Search (JSON only - NO Supabase)
+  - Data: postal-codes.json only (fetched via fetch(), no database)
+  - Template: all UI is built from this HTML file (inline templates in script)
+  Serve via HTTP (e.g. npx serve . or Vite) so the JSON can be loaded.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <title>South African Postal Code Search</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f8fafc;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      color: #1e293b;
+    }
+    .container { max-width: 56rem; margin: 0 auto; padding: 3rem 1rem; }
+    .title { font-size: 3rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; }
+    .subtitle { font-size: 1.125rem; color: #475569; }
+    .hero-header {
+      border-radius: 0.75rem;
+      padding: 2rem 1rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      background: linear-gradient(135deg, #0f3d1f, #14532d, #166534, #22c55e, #15803d, #166534, #0f3d1f);
+      background-size: 400% 400%;
+      animation: headerGradient 12s ease infinite;
+      box-shadow: 0 8px 20px rgb(20 83 45 / 0.35);
+    }
+    .hero-title {
+      margin: 0;
+      color: #ffffff;
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .hero-subtitle {
+      margin: 0.35rem 0 0 0;
+      color: rgb(240 253 244 / 0.92);
+      font-size: clamp(0.78rem, 1.6vw, 0.92rem);
+      font-weight: 500;
+      line-height: 1.35;
+    }
+    .site-header {
+      border-radius: 0;
+      margin-bottom: 0;
+      padding: 1rem;
+    }
+    .header-inner { display:flex; align-items:center; justify-content:space-between; width:100%; }
+    .header-logo { flex-shrink:0; display:flex; align-items:center; justify-content:center; width:48px; height:48px; min-width:48px; min-height:48px; background:#fff; border-radius:50%; padding:6px; box-sizing:border-box; }
+    .header-logo img { width:100%; height:100%; object-fit:contain; border-radius:50%; }
+    .header-text { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; }
+    .header-spacer { flex-shrink:0; width:48px; height:48px; }
+    .site-header .hero-title {
+      font-size: clamp(1.35rem, 3vw, 2rem);
+    }
+    .card {
+      background: #fff;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      border: 1px solid #e2e8f0;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .search-box .search-input-wrap {
+      flex: 1;
+      min-width: 12rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .search-box input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      font-size: 1.125rem;
+      color: #1e293b;
+    }
+    .search-box input::placeholder { color: #94a3b8; }
+    .search-box .btn-location { flex-shrink: 0; }
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #fff;
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      border: 1px solid #166534;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      margin-bottom: 2rem;
+      text-decoration: none;
+      box-shadow: 0 1px 3px rgba(21, 128, 61, 0.25);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+    }
+    .btn-back:hover {
+      background: linear-gradient(135deg, #15803d, #166534);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(21, 128, 61, 0.35);
+      transform: translateY(-1px);
+    }
+    .btn-location {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      background: #16a34a;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .btn-location:hover { background: #15803d; }
+    .btn-location:disabled { opacity: 0.6; cursor: not-allowed; }
+    .result-row {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      text-align: left;
+      background: none;
+      border: none;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      font: inherit;
+    }
+    .result-row:hover { background: #f8fafc; }
+    .result-row:last-child { border-bottom: none; }
+    .result-area { font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.25rem; }
+    .result-meta { font-size: 0.875rem; color: #475569; }
+    .result-code { font-size: 1.25rem; font-weight: 700; color: #15803d; }
+    .detail-header {
+      background: linear-gradient(120deg, #14532d, #166534, #15803d, #14532d);
+      background-size: 300% 300%;
+      animation: cardHeaderGradient 24s ease infinite;
+      color: #fff;
+      padding: 3rem 2rem;
+    }
+    .detail-header h1 { font-size: 3.75rem; font-weight: 700; margin: 0 0 0.5rem 0; }
+    .detail-header p { font-size: 1.125rem; color: rgba(220,252,231,0.95); margin: 0; }
+    .detail-body { padding: 2rem; }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; }
+    .detail-item { display: flex; align-items: flex-start; gap: 0.75rem; }
+    .detail-label { font-size: 0.875rem; font-weight: 500; color: #64748b; margin-bottom: 0.25rem; }
+    .detail-value { font-size: 1.125rem; font-weight: 600; color: #1e293b; }
+    .detail-link, .result-meta-link { color: #2563eb; text-decoration: none; }
+    .detail-link:hover, .result-meta-link:hover { text-decoration: underline; }
+    .detail-block { padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; }
+    .detail-block:last-of-type { border-bottom: none; }
+    .about-title { font-size: 1.125rem; font-weight: 600; color: #1e293b; margin-bottom: 1rem; }
+    .about-text { color: #475569; line-height: 1.6; }
+    .alias-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .alias-chip {
+      display: inline-block;
+      padding: 0.375rem 0.75rem;
+      background: #f1f5f9;
+      color: #334155;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      text-decoration: none;
+      border: 1px solid #e2e8f0;
+    }
+    .alias-chip:hover { background: #e2e8f0; color: #1e293b; }
+    .spinner {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      border: 4px solid #94a3b8;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes headerGradient {
+      0% { background-position: 0% 50%; }
+      25% { background-position: 50% 100%; }
+      50% { background-position: 100% 50%; }
+      75% { background-position: 50% 0%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes cardHeaderGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .text-center { text-align: center; }
+    .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+    .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+    .text-slate-500 { color: #64748b; }
+    .text-amber-600 { color: #b45309; font-size: 0.875rem; padding: 0 1rem 0.75rem; }
+    .icon { flex-shrink: 0; }
+    /* Mobile-first responsive optimizations */
+    @media (max-width: 768px) {
+      .header-logo { width:40px; height:40px; min-width:40px; min-height:40px; padding:5px; }
+      .header-spacer { width:40px; height:40px; }
+      .container { padding: 1.5rem 1rem; }
+      .title { font-size: 1.75rem; }
+      .subtitle { font-size: 1rem; }
+      .hero-header { padding: 1.25rem 1rem; border-radius: 0; }
+      .site-header .hero-title { font-size: clamp(1.25rem, 5vw, 1.75rem); }
+      .search-box { padding: 0.875rem; gap: 0.5rem; }
+      .search-box input { font-size: 1rem; }
+      .search-box .search-input-wrap { min-width: 0; }
+      .result-row { padding: 1rem 1rem; min-height: 3.5rem; }
+      .result-area { font-size: 1rem; }
+      .result-code { font-size: 1.125rem; }
+      .detail-header { padding: 2rem 1.25rem; }
+      .detail-header h1 { font-size: 2.5rem; }
+      .detail-header p { font-size: 1rem; }
+      .detail-body { padding: 1.5rem 1rem; }
+      .detail-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .detail-value { font-size: 1rem; }
+      .btn-back { padding: 0.625rem 1rem; min-height: 2.75rem; }
+      .footer-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+      .footer-section p { font-size: 0.9rem; }
+    }
+    @media (max-width: 480px) {
+      .container { padding: 1rem 0.75rem; }
+      .detail-header h1 { font-size: 2rem; }
+      .btn-location { padding: 0.5rem 0.625rem; min-height: 2.5rem; }
+    }
+    @media (max-width: 380px) {
+      .btn-location .btn-location-text { display: none; }
+      .result-row { padding: 0.875rem 0.75rem; }
+    }
+    .site-footer {
+      margin-top: 3rem;
+      padding: 2rem 1.5rem;
+      background: linear-gradient(160deg, #166534, #15803d, #14532d);
+      color: #dcfce7;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .footer-inner { max-width: 56rem; margin: 0 auto; }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .footer-section h3 { font-size: 1rem; font-weight: 700; color: #fff; margin: 0 0 0.5rem 0; }
+    .footer-section p { margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.9); }
+    .footer-section a { color: #bbf7d0; text-decoration: none; }
+    .footer-section a:hover { text-decoration: underline; }
+    .footer-copyright { padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2); font-size: 0.85rem; opacity: 0.9; text-align: center; }
+    .how-to-use-top { margin-bottom:1.25rem; padding:0.75rem 1.25rem; border-radius:0.75rem; background:#ecfdf5; border:1px solid #22c55e; color:#14532d; }
+    .how-to-use-summary { font-weight:700; font-size:1rem; color:#14532d; cursor:pointer; user-select:none; border:none; background:none; padding:0; text-align:left; width:100%; }
+    .how-to-use-summary::before { content:"▸ "; font-size:0.9em; }
+    .how-to-use-top.open .how-to-use-summary::before { content:"▾ "; }
+    .how-to-use-anim { display:grid; grid-template-rows:0fr; transition:grid-template-rows 0.3s ease-out; }
+    .how-to-use-top.open .how-to-use-anim { grid-template-rows:1fr; }
+    .how-to-use-lines { min-height:0; overflow:hidden; margin-top:0.75rem; padding-top:0.5rem; border-top:1px solid rgba(34,197,94,0.4); font-size:0.9rem; line-height:1.8; color:#166534; }
+    .page-loader { position:fixed; inset:0; background:rgba(255,255,255,0.5); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); z-index:99999; display:flex; align-items:center; justify-content:center; transition:opacity 0.3s ease; }
+    .page-loader.hidden { opacity:0; pointer-events:none; }
+    .page-loader__icon { width:64px; height:64px; animation:loaderSpin 0.6s ease-in-out 1 forwards; }
+    @keyframes loaderSpin { to { transform:rotate(360deg); } }
+    .bg-circles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .page-with-circles { position: relative; min-height: 100vh; }
+    .bg-circle {
+      position: absolute;
+      border-radius: 50%;
+    }
+    .bg-circle--solid {
+      background: rgba(167, 243, 208, 0.2);
+      border: none;
+    }
+    .bg-circle--dashed {
+      background: transparent;
+      border: 2px dashed rgba(34, 197, 94, 0.3);
+    }
+    .bg-circle--gradient {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.22), rgba(249, 115, 22, 0.18));
+      border: none;
+    }
+    .bg-circle--gradient-dashed {
+      background: transparent;
+      border: 2px dashed rgba(251, 146, 60, 0.35);
+    }
+    .bg-circle--green-gradient {
+      background: linear-gradient(135deg, rgba(74, 222, 128, 0.22), rgba(34, 197, 94, 0.18));
+      border: none;
+    }
+    .bg-circle--dotted {
+      background: transparent;
+      border: 2px dotted rgba(34, 197, 94, 0.35);
+    }
+    .bg-circle-1 { left: -18%; top: 8%; width: 42vmin; height: 42vmin; }
+    .bg-circle-2 { left: -12%; bottom: 25%; width: 38vmin; height: 38vmin; }
+    .bg-circle-3 { right: -22%; top: 15%; width: 48vmin; height: 48vmin; }
+    .bg-circle-4 { right: -15%; top: 50%; width: 35vmin; height: 35vmin; }
+    .bg-circle-5 { right: -8%; bottom: 10%; width: 40vmin; height: 40vmin; }
+    .bg-circle-6 { left: -10%; top: 55%; width: 32vmin; height: 32vmin; }
+    .bg-circle-7 { left: 5%; top: 35%; width: 28vmin; height: 28vmin; }
+    .bg-circle-8 { right: 2%; top: 70%; width: 36vmin; height: 36vmin; }
+    .bg-circle-9 { left: -8%; bottom: 5%; width: 44vmin; height: 44vmin; }
+    .bg-circle-10 { right: -28%; top: 40%; width: 52vmin; height: 52vmin; }
+    .bg-circle-11 { left: 15%; top: 75%; width: 30vmin; height: 30vmin; }
+    .bg-circle-12 { right: 10%; bottom: 30%; width: 26vmin; height: 26vmin; }
+    .bg-circle-13 { left: -25%; top: 14%; width: 55vmin; height: 55vmin; }
+    .bg-circle-14 { left: -15%; top: 22%; width: 50vmin; height: 50vmin; }
+    .bg-circle-15 { left: -20%; top: 18%; width: 48vmin; height: 48vmin; }
+    .bg-circle-16 { right: -28%; top: 28%; width: 56vmin; height: 56vmin; }
+    .bg-circle-17 { right: -18%; top: 34%; width: 52vmin; height: 52vmin; }
+    .bg-circle-18 { right: -22%; top: 30%; width: 50vmin; height: 50vmin; }
+    .bg-circle-19 { left: -5%; top: 5%; width: 38vmin; height: 38vmin; }
+    .bg-circle-20 { left: 25%; top: 8%; width: 32vmin; height: 32vmin; }
+    .bg-circle-21 { right: 15%; top: 6%; width: 36vmin; height: 36vmin; }
+    .bg-circle-22 { left: 40%; top: 3%; width: 28vmin; height: 28vmin; }
+    .bg-circle-23 { right: -8%; top: 10%; width: 42vmin; height: 42vmin; }
+    .bg-circle-24 { left: 8%; top: 12%; width: 30vmin; height: 30vmin; }
+    .site-header, #app, .site-footer { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+  <div class="page-with-circles">
+  <div class="bg-circles" aria-hidden="true">
+    <div class="bg-circle bg-circle--solid bg-circle-1"></div>
+    <div class="bg-circle bg-circle--dashed bg-circle-2"></div>
+    <div class="bg-circle bg-circle--gradient bg-circle-3"></div>
+    <div class="bg-circle bg-circle--solid bg-circle-4"></div>
+    <div class="bg-circle bg-circle--gradient-dashed bg-circle-5"></div>
+    <div class="bg-circle bg-circle--solid bg-circle-6"></div>
+    <div class="bg-circle bg-circle--gradient bg-circle-7"></div>
+    <div class="bg-circle bg-circle--dashed bg-circle-8"></div>
+    <div class="bg-circle bg-circle--gradient bg-circle-9"></div>
+    <div class="bg-circle bg-circle--gradient-dashed bg-circle-10"></div>
+    <div class="bg-circle bg-circle--solid bg-circle-11"></div>
+    <div class="bg-circle bg-circle--gradient bg-circle-12"></div>
+    <div class="bg-circle bg-circle--solid bg-circle-13"></div>
+    <div class="bg-circle bg-circle--green-gradient bg-circle-14"></div>
+    <div class="bg-circle bg-circle--dotted bg-circle-15"></div>
+    <div class="bg-circle bg-circle--solid bg-circle-16"></div>
+    <div class="bg-circle bg-circle--gradient bg-circle-17"></div>
+    <div class="bg-circle bg-circle--dotted bg-circle-18"></div>
+    <div class="bg-circle bg-circle--gradient bg-circle-19"></div>
+    <div class="bg-circle bg-circle--dashed bg-circle-20"></div>
+    <div class="bg-circle bg-circle--solid bg-circle-21"></div>
+    <div class="bg-circle bg-circle--green-gradient bg-circle-22"></div>
+    <div class="bg-circle bg-circle--dotted bg-circle-23"></div>
+    <div class="bg-circle bg-circle--gradient-dashed bg-circle-24"></div>
+  </div>
+  <div id="page-loader" class="page-loader">
+    <img src="/icon.png" alt="" class="page-loader__icon" />
+  </div>
+  <header class="hero-header site-header">
+    <div class="header-inner">
+      <a href="/" class="header-logo"><img src="/icon.png" alt="" /></a>
+      <div class="header-text">
+        <h1 class="hero-title">South African Postal Code Search</h1>
+        <p class="hero-subtitle">Find postal codes for any area across South Africa</p>
+      </div>
+      <div class="header-spacer" aria-hidden="true"></div>
+    </div>
+  </header>
+  <div id="app"><div class="container text-center py-12"><div class="spinner" style="margin:0 auto"></div><p class="text-slate-500 mt-4">Loading postal codes...</p></div></div>
+  </div>
+
+  <!-- Path to the separate JSON data file (same folder as this HTML) -->
+  <script id="postal-data-config" type="text/plain" data-json-src="postal-codes.json"></script>
+  <script>
+    (function () {
+      // Data source: JSON file only (no Supabase). Template: this HTML file.
+      const config = document.getElementById('postal-data-config');
+      const jsonPath = (config && config.getAttribute('data-json-src')) || 'postal-codes.json';
+      // Resolve JSON URL relative to current page so it works from any path
+      function getJsonUrl() {
+        try {
+          return new URL(jsonPath, window.location.href).href;
+        } catch (e) {
+          return jsonPath;
+        }
+      }
+      let DATA = []; // populated from postal-codes.json; search filters this array
+
+      function q(s) { return document.querySelector(s); }
+      function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+      function cleanDisplay(s) { var t = (s == null ? '' : String(s)).trim(); return (t && t.toLowerCase() !== 'xx') ? t : ''; }
+      function toSlug(s) { if (!s) return ''; return String(s).trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'area'; }
+      var _townSlugMap = null;
+      function buildTownSlugMap() {
+        if (_townSlugMap) return _townSlugMap;
+        var byTown = {};
+        DATA.forEach(function (r) { var c = (r.city || '').trim(); if (c) { var k = c.toLowerCase(); if (!byTown[k]) byTown[k] = {}; byTown[k][(r.province || '').toLowerCase()] = 1; } });
+        _townSlugMap = {};
+        DATA.forEach(function (r) {
+          var city = (r.city || '').trim(), province = (r.province || '').trim();
+          if (!city) return;
+          var key = (province + '|' + city).toLowerCase();
+          if (_townSlugMap[key]) return;
+          var provs = Object.keys(byTown[city.toLowerCase()] || {});
+          var base = toSlug(city);
+          _townSlugMap[key] = provs.length > 1 ? toSlug(province) + '-' + base : base;
+        });
+        return _townSlugMap;
+      }
+      function getTownSlug(city, province) {
+        if (!DATA.length) return toSlug(city) || 'area';
+        buildTownSlugMap();
+        var key = ((province || '') + '|' + (city || '')).toLowerCase();
+        return _townSlugMap[key] || toSlug(city) || 'area';
+      }
+
+      function searchFilter(query) {
+        const q = query.trim().toLowerCase();
+        if (!q) return [];
+
+        const cards = [];
+        const seen = {};
+
+        DATA.forEach(function (row) {
+          const area = (row.area || '').toLowerCase();
+          const city = (row.city || '').toLowerCase();
+          const province = (row.province || '').toLowerCase();
+          const code = (row.postal_code || '').toLowerCase();
+          const aliasList = (row.aliases || '').split('|').map(function (s) { return s.trim(); }).filter(Boolean).filter(function (a) { return a.toLowerCase() !== 'xx'; });
+
+          const primaryMatch =
+            area.includes(q) ||
+            city.includes(q) ||
+            province.includes(q) ||
+            code.includes(q);
+
+          if (primaryMatch) {
+            const key = 'entry:' + row.id;
+            if (!seen[key]) {
+              seen[key] = true;
+              cards.push({
+                id: row.id,
+                postal_code: row.postal_code,
+                title: row.area,
+                city: row.city,
+                province: row.province,
+                isAlias: false,
+                alias: '',
+                route: 'entry/' + row.id
+              });
+            }
+          }
+
+          aliasList.forEach(function (alias) {
+            if (alias.toLowerCase() !== 'xx' && alias.toLowerCase().includes(q)) {
+              const key = 'alias:' + row.id + ':' + alias.toLowerCase();
+              if (!seen[key]) {
+                seen[key] = true;
+                cards.push({
+                  id: row.id,
+                  postal_code: row.postal_code,
+                  title: alias,
+                  city: row.city,
+                  province: row.province,
+                  isAlias: true,
+                  alias: alias,
+                  area: row.area,
+                  route: 'alias/' + row.id + '/' + encodeURIComponent(alias)
+                });
+              }
+            }
+          });
+        });
+
+        return cards.slice(0, 20);
+      }
+
+      function findBestLocationMatch(addr) {
+        var postcode = String(addr.postcode || '').trim();
+        var suburb = String(addr.suburb || addr.neighbourhood || addr.quarter || '').trim();
+        var village = String(addr.village || addr.town || '').trim();
+        var city = String(addr.city || addr.municipality || addr.county || '').trim();
+        var state = String(addr.state || '').trim();
+        if (city && city.indexOf(' of ') > 0) city = city.replace(/^(City|District|Metropolitan Municipality) of /i, '').trim();
+        var terms = [postcode, suburb, village, city, state].filter(Boolean);
+        var combined = [suburb + ' ' + city, suburb + village, village + city].map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 2; });
+        terms = terms.concat(combined);
+        var seen = {};
+        var best = null, bestScore = 0;
+        for (var i = 0; i < terms.length; i++) {
+          var q = terms[i];
+          if (!q || q.length < 2 || seen[q.toLowerCase()]) continue;
+          seen[q.toLowerCase()] = 1;
+          var matches = searchFilter(q);
+          for (var j = 0; j < matches.length; j++) {
+            var r = matches[j], s = 0;
+            if (postcode && r.postal_code === postcode) s = 100;
+            else if ((r.title || r.area || '').toLowerCase().indexOf(terms[i].toLowerCase()) >= 0 || (r.alias || '').toLowerCase().indexOf(terms[i].toLowerCase()) >= 0) s = 85;
+            else if ((r.city || '').toLowerCase().indexOf(terms[i].toLowerCase()) >= 0) s = 70;
+            else if ((r.province || '').toLowerCase().indexOf(terms[i].toLowerCase()) >= 0) s = 50;
+            if (s > bestScore) { bestScore = s; best = r; }
+          }
+          if (bestScore >= 100) break;
+        }
+        return best;
+      }
+
+      function getByPostalCode(code) {
+        return DATA.filter(function (r) { return r.postal_code === code; });
+      }
+
+      function getEntryById(id) {
+        return DATA.find(function (r) { return r.id === id; }) || null;
+      }
+
+      function getSearchResultsHtml(viewState) {
+        const query = viewState.query || '';
+        const results = searchFilter(query);
+        const isLoading = viewState.loading;
+        if (isLoading) return '<div class="text-center py-8"><div class="spinner"></div></div>';
+        if (results.length > 0) {
+          return '<div class="card">' +
+            results.map(function (r) {
+              var townSlug = getTownSlug(r.city, r.province);
+              var provSlug = toSlug(r.province);
+              var cityPart = r.city ? '<a href="/town/' + townSlug + '/" class="result-meta-link" onclick="event.stopPropagation()">' + escapeHtml(cleanDisplay(r.city)) + '</a>' : '';
+              var provPart = r.province ? '<a href="/province/' + provSlug + '/" class="result-meta-link" onclick="event.stopPropagation()">' + escapeHtml(cleanDisplay(r.province)) + '</a>' : '';
+              var meta = cityPart + (cityPart && provPart ? ', ' : '') + provPart;
+              return '<button type="button" class="result-row" data-route="' + escapeHtml(r.route || ('entry/' + r.id)) + '">' +
+                '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+                  '<div><div class="result-area">' + escapeHtml(cleanDisplay(r.title)) + '</div><p class="result-meta">' + meta + '</p></div>' +
+                  '<div class="result-code">' + escapeHtml(r.postal_code) + '</div>' +
+                '</div></button>';
+            }).join('') + '</div>';
+        }
+        if (query && results.length === 0) {
+          return '<div class="text-center py-12">' +
+            (DATA.length === 0
+              ? '<p class="text-slate-500" style="font-size:1.125rem">Data not loaded. Serve this page via HTTP (e.g. <code>npx serve .</code>) with <code>postal-codes.json</code> in the same folder.</p>'
+              : '<p class="text-slate-500" style="font-size:1.125rem">No postal codes found for "' + escapeHtml(query) + '"</p>') +
+            '</div>';
+        }
+        return '';
+      }
+
+      function getAboutPostalCodesHtml() {
+        return '<div class="card" style="margin-top:2rem;padding:1.5rem 1.5rem 1.75rem">' +
+          '<h2 class="about-title" style="font-size:1.5rem;margin-bottom:1rem">About Postal Codes</h2>' +
+          '<p class="about-text">South African postal codes are four-digit numerical codes used by the South African Post Office to facilitate mail delivery and identify geographic locations throughout the country. These codes are essential for ensuring accurate and efficient mail routing to addresses across all provinces.</p>' +
+          '<p class="about-text" style="margin-top:1rem">Each postal code corresponds to specific areas, suburbs, or regions within cities, making it easier for both mail carriers and residents to identify precise locations. The system covers all nine provinces: Gauteng, Western Cape, KwaZulu-Natal, Eastern Cape, Free State, Mpumalanga, Limpopo, North West, and Northern Cape.</p>' +
+        '</div>' +
+        '<div class="card" style="margin-top:1rem;padding:1.5rem 1.5rem 1.75rem">' +
+          '<h3 class="about-title" style="font-size:1.125rem;margin-bottom:0.75rem">History &amp; Purpose</h3>' +
+          '<p class="about-text">South Africa&#39;s postal code system was implemented to improve mail delivery efficiency and standardize address identification. The four-digit format allows for comprehensive coverage of all urban and rural areas throughout the nation.</p>' +
+          '<p class="about-text" style="margin-top:1rem">Today, postal codes are used for more than just mail delivery. They&#39;re essential for logistics, e-commerce, emergency services, and administrative purposes. They help businesses identify service areas and enable better location-based services for customers across South Africa.</p>' +
+        '</div>';
+      }
+
+      function getHowToUseTopHtml() {
+        return '<div class="how-to-use-top">' +
+          '<button type="button" class="how-to-use-summary" aria-expanded="false" aria-controls="how-to-use-content">How to Use</button>' +
+          '<div class="how-to-use-anim" id="how-to-use-content">' +
+            '<div class="how-to-use-lines">' +
+              '1. <strong>Use Location</strong> — Click the green button to find your postal code from your current position<br>' +
+              '2. <strong>Find Results</strong> — Browse matching postal codes and their details<br>' +
+              '3. <strong>View Details</strong> — Click on any result to see full postal code information' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }
+
+      function renderSearch(viewState) {
+        const query = viewState.query || '';
+        const locationError = viewState.locationError || '';
+        const resultsWrap = document.getElementById('searchResultsWrap');
+
+        if (!resultsWrap) {
+          document.getElementById('app').innerHTML =
+            '<div class="container" id="searchView">' +
+              getHowToUseTopHtml() +
+              (DATA.length > 0 ? '<p class="text-slate-500 text-center" style="font-size:0.875rem;margin-top:0;margin-bottom:1rem">' + DATA.length.toLocaleString() + ' postal codes loaded</p>' : '') +
+              '<div class="card mb-8">' +
+                '<div class="search-box">' +
+                  '<div class="search-input-wrap">' +
+                    '<svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
+                    '<input type="text" id="searchInput" placeholder="Search by postal code, area, or city..." value="' + escapeHtml(query) + '" autocomplete="off" aria-label="Search postal codes">' +
+                  '</div>' +
+                  '<button type="button" class="btn-location" id="btnLocation" title="Use my location to find nearby postal code" aria-label="Use my location"' + (viewState.locationLoading ? ' disabled' : '') + '>' +
+                    (viewState.locationLoading ? '<span class="spinner" style="width:1rem;height:1rem;border-width:2px"></span>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>') +
+                    '<span class="btn-location-text">Use location</span>' +
+                  '</button>' +
+                '</div>' +
+                (locationError ? '<p class="text-amber-600" role="alert" id="locationError">' + escapeHtml(locationError) + '</p>' : '<p class="text-amber-600" role="alert" id="locationError" style="display:none"></p>') +
+              '</div>' +
+              '<div id="searchResultsWrap">' + getSearchResultsHtml(viewState) + '</div>' +
+              getAboutPostalCodesHtml() +
+            '</div>';
+
+          document.getElementById('searchInput').addEventListener('input', function () {
+            setState({ query: this.value });
+          });
+          document.getElementById('btnLocation').addEventListener('click', useLocation);
+          var howToBtn = document.querySelector('.how-to-use-summary');
+          if (howToBtn) {
+            howToBtn.addEventListener('click', function () {
+              var box = this.closest('.how-to-use-top');
+              if (box) {
+                box.classList.toggle('open');
+                this.setAttribute('aria-expanded', box.classList.contains('open'));
+              }
+            });
+          }
+        } else {
+          document.getElementById('searchResultsWrap').innerHTML = getSearchResultsHtml(viewState);
+          var errEl = document.getElementById('locationError');
+          if (errEl) {
+            errEl.textContent = locationError;
+            errEl.style.display = locationError ? 'block' : 'none';
+          }
+          var locBtn = document.getElementById('btnLocation');
+          if (locBtn) {
+            locBtn.disabled = !!viewState.locationLoading;
+            locBtn.innerHTML = viewState.locationLoading ? '<span class="spinner" style="width:1rem;height:1rem;border-width:2px"></span><span class="btn-location-text">Use location</span>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span class="btn-location-text">Use location</span>';
+          }
+        }
+
+        document.querySelectorAll('.result-row').forEach(function (el) {
+          el.addEventListener('click', function () {
+            window.location.hash = el.getAttribute('data-route');
+            render();
+          });
+        });
+      }
+
+      function useLocation() {
+        if (!navigator.geolocation) {
+          setState({ locationError: 'Geolocation is not supported by your browser.' });
+          return;
+        }
+        setState({ locationError: '', locationLoading: true });
+        var lat, lon;
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            lat = position.coords.latitude;
+            lon = position.coords.longitude;
+            var nomFetch = fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&addressdetails=1', { headers: { 'Accept-Language': 'en', 'User-Agent': 'MyZipCode-co-za/1.0' } }).then(function (r) { return r.json(); });
+            var photonFetch = fetch('https://photon.komoot.io/reverse?lat=' + lat + '&lon=' + lon).then(function (r) { return r.json(); }).catch(function () { return null; });
+            Promise.all([nomFetch, photonFetch]).then(function (arr) {
+              state.locationLoading = false;
+              var data = arr[0], photon = arr[1];
+              var addr = data && data.address || {};
+              if (data && data.country_code && data.country_code !== 'za') {
+                setState({ locationError: 'Location is not in South Africa.' });
+                return;
+              }
+              if (photon && photon.features && photon.features[0]) {
+                var p = photon.features[0].properties || {};
+                if (p.countrycode !== 'ZA') { setState({ locationError: 'Location is not in South Africa.' }); return; }
+                if (p.postcode) addr.postcode = p.postcode;
+                if (p.locality) addr.suburb = p.locality;
+                if (!addr.city && p.city) addr.city = p.city;
+                if (!addr.state && p.state) addr.state = p.state;
+                if (!addr.municipality && p.county) addr.municipality = p.county;
+              }
+              var best = findBestLocationMatch(addr);
+              if (best) {
+                window.location.hash = best.route || ('entry/' + best.id);
+                setState({});
+                return;
+              }
+              var q = String(addr.postcode || addr.suburb || addr.neighbourhood || addr.city || addr.town || addr.village || addr.municipality || addr.state || '').trim();
+              if (q) {
+                var results = searchFilter(q);
+                if (results.length > 0) {
+                  window.location.hash = results[0].route || ('entry/' + results[0].id);
+                  setState({});
+                  return;
+                }
+              }
+              setState({ locationError: 'No South African postal code found for this location.' });
+            }).catch(function () {
+              setState({ locationLoading: false, locationError: 'Failed to look up address.' });
+            });
+          },
+          function (err) {
+            var msg = err.code === 1 ? 'Location access was denied.' : err.code === 2 ? 'Location unavailable.' : 'Could not get your location.';
+            setState({ locationLoading: false, locationError: msg });
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+      }
+
+      function renderDetailByEntryId(entryId, selectedAlias) {
+        const entry = getEntryById(entryId);
+        if (!entry) {
+          document.getElementById('app').innerHTML =
+            '<div class="container">' +
+              '<button type="button" class="btn-back" id="backBtn">&#8592; Back to search</button>' +
+              '<div class="text-center py-12"><p class="text-slate-500" style="font-size:1.125rem">Place not found</p></div>' +
+            '</div>';
+          document.getElementById('backBtn').onclick = function () { window.location.hash = ''; render(); };
+          return;
+        }
+
+        const displayName = cleanDisplay(selectedAlias || entry.area);
+        const code = cleanDisplay(entry.postal_code) || entry.postal_code;
+        const cityDisplay = cleanDisplay(entry.city);
+        const provinceDisplay = cleanDisplay(entry.province);
+        const others = getByPostalCode(entry.postal_code).filter(function (r) { return r.id !== entryId; });
+        const othersAreas = others.map(function (d) { return cleanDisplay(d.area); }).filter(Boolean);
+        const aboutText = othersAreas.length === 0
+          ? 'The postal code <strong>' + escapeHtml(code) + '</strong> serves <strong>' + escapeHtml(displayName) + '</strong> in <strong>' + escapeHtml(cityDisplay) + '</strong>, <strong>' + escapeHtml(provinceDisplay) + '</strong>. This is an official South African postal code used for mail delivery and location identification.'
+          : 'The postal code <strong>' + escapeHtml(code) + '</strong> serves <strong>' + escapeHtml(displayName) + '</strong> in <strong>' + escapeHtml(cityDisplay) + '</strong>, <strong>' + escapeHtml(provinceDisplay) + '</strong>. This code also serves: ' + othersAreas.map(function (a) { return escapeHtml(a); }).join(', ') + '. This is an official South African postal code used for mail delivery and location identification.';
+
+        var aliasList = (entry.aliases && entry.aliases.split('|').map(function (s) { return s.trim(); }).filter(Boolean).filter(function (a) { return a.toLowerCase() !== 'xx'; })) || [];
+        const aliasesHtml = aliasList.length > 0
+          ? '<div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e2e8f0">' +
+              '<h2 class="about-title">Also known as</h2>' +
+              '<div class="alias-chips">' +
+                aliasList.map(function (alias) {
+                  return '<a href="#alias/' + escapeHtml(entryId) + '/' + encodeURIComponent(alias) + '" class="alias-chip">' + escapeHtml(alias) + '</a>';
+                }).join('') +
+              '</div></div>'
+          : '';
+
+        const svgPin = '<svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
+        const svgBuilding = '<svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M9 6h.01M15 6h.01M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg>';
+        const svgMap = '<svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M8 2v20M16 2v20M2 8h4M2 16h4M18 8h4M18 16h4M2 12h20"/></svg>';
+
+        document.getElementById('app').innerHTML =
+          '<div class="container">' +
+            '<button type="button" class="btn-back" id="backBtn">&#8592; Back to search</button>' +
+            '<div class="card" style="overflow:hidden">' +
+              '<div class="detail-header">' +
+                '<h1>' + escapeHtml(code) + '</h1>' +
+                '<p>South African Postal Code · ' + escapeHtml(displayName) + '</p>' +
+              '</div>' +
+              '<div class="detail-body">' +
+                '<div class="detail-grid">' +
+                  '<div class="detail-item"><div>' + svgPin + '</div><div><div class="detail-label">Area</div><div class="detail-value">' + escapeHtml(displayName) + '</div></div></div>' +
+                  '<div class="detail-item"><div>' + svgBuilding + '</div><div><div class="detail-label">City</div><div class="detail-value">' + (cityDisplay ? '<a href="/town/' + getTownSlug(entry.city, entry.province) + '/" class="detail-link">' + escapeHtml(cityDisplay) + '</a>' : '') + '</div></div></div>' +
+                  '<div class="detail-item"><div>' + svgMap + '</div><div><div class="detail-label">Province</div><div class="detail-value">' + (provinceDisplay ? '<a href="/province/' + toSlug(entry.province) + '/" class="detail-link">' + escapeHtml(provinceDisplay) + '</a>' : '') + '</div></div></div>' +
+                '</div>' +
+                aliasesHtml +
+                '<div style="margin-top:2rem;padding-top:2rem;border-top:1px solid #e2e8f0">' +
+                  '<h2 class="about-title">About This Postal Code</h2>' +
+                  '<p class="about-text">' + aboutText + '</p>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        document.getElementById('backBtn').onclick = function () {
+          window.location.hash = '';
+          render();
+        };
+      }
+
+      var state = { query: '', loading: false, locationLoading: false, locationError: '' };
+      function setState(updates) {
+        for (var k in updates) state[k] = updates[k];
+        render();
+      }
+
+      function render() {
+        var hash = (window.location.hash || '').replace(/^#\/?/, '');
+        if (hash.indexOf('alias/') === 0) {
+          var aliasParts = hash.split('/');
+          var aliasEntryId = (aliasParts[1] || '').trim();
+          var aliasName = aliasParts.slice(2).join('/');
+          if (aliasEntryId) {
+            renderDetailByEntryId(aliasEntryId, decodeURIComponent(aliasName || ''));
+            return;
+          }
+        }
+        if (hash.indexOf('entry/') === 0) {
+          var entryId = hash.replace('entry/', '').trim();
+          if (entryId) {
+            renderDetailByEntryId(entryId);
+            return;
+          }
+        }
+        if (hash.indexOf('code/') === 0) {
+          var code = hash.replace('code/', '').trim();
+          var entries = getByPostalCode(code);
+          if (entries.length > 0) {
+            window.location.hash = 'entry/' + entries[0].id;
+            render();
+            return;
+          }
+        }
+        renderSearch(state);
+      }
+
+      window.addEventListener('hashchange', render);
+
+      function tryLoad(url) {
+        return fetch(url)
+          .then(function (res) {
+            if (!res.ok) throw new Error('Not found');
+            return res.json();
+          })
+          .then(function (data) {
+            if (!Array.isArray(data) || data.length === 0) throw new Error('Invalid or empty data');
+            return data;
+          });
+      }
+
+      tryLoad(getJsonUrl())
+        .catch(function () { return tryLoad('/postal-codes.json'); })
+        .catch(function () { return tryLoad('postal-codes.json'); })
+        .then(function (data) {
+          if (data) {
+            DATA = data;
+            state.loading = false;
+            render();
+          }
+        })
+        .catch(function () {
+          document.getElementById('app').innerHTML =
+            '<div class="container">' +
+              '<p class="text-slate-500" style="margin-bottom:1rem">Postal code data could not be loaded.</p>' +
+              '<p class="text-slate-500" style="margin-bottom:1rem">1. Put <code>postal-codes.json</code> in the same folder as this HTML file.</p>' +
+              '<p class="text-slate-500" style="margin-bottom:1rem">2. Open this page via HTTP (do not double-click the file). Run in this folder:</p>' +
+              '<pre style="background:#e2e8f0;padding:0.75rem;border-radius:0.375rem;overflow:auto">npx serve .</pre>' +
+              '<p class="text-slate-500 mt-4">Then open the URL shown (e.g. http://localhost:3000/postal-code-search.html).</p>' +
+            '</div>';
+        });
+    })();
+  </script>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h3>About</h3>
+          <p>This website helps you quickly find South African postal codes by province, town, and area.</p>
+          <p>Our goal is to provide a simple, accurate, and easy-to-use reference for individuals, businesses, and developers looking up postal codes across South Africa.</p>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p>If you notice incorrect information or have suggestions, please contact us:</p>
+          <p>Email: <a href="mailto:ontheworkhouse@gmail.com">ontheworkhouse@gmail.com</a></p>
+          <p>We aim to keep this data accurate and up to date.</p>
+        </div>
+        <div class="footer-section">
+          <h3>Data Source</h3>
+          <p>Postal code data is sourced from the South African Post Office (SAPO) and has been cleaned and structured for public lookup and educational use.</p>
+          <p>This site is not affiliated with SAPO.</p>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <strong>Copyright</strong><br>
+        © 2026 MyZipCode.co.za — All rights reserved.<br>
+        Postal code data remains the property of their respective owners.
+      </div>
+    </div>
+  </footer>
+  <script>
+    (function(){
+      var loader=document.getElementById('page-loader');
+      var minTime=600;
+      var start=Date.now();
+      function hide(){
+        if(!loader)return;
+        loader.classList.add('hidden');
+        setTimeout(function(){ if(loader.parentNode)loader.parentNode.removeChild(loader); }, 350);
+      }
+      function tryHide(){
+        var elapsed=Date.now()-start;
+        if(elapsed>=minTime)hide();
+        else setTimeout(hide, minTime-elapsed);
+      }
+      if(document.readyState==='complete')tryHide();
+      else window.addEventListener('load',tryHide);
+    })();
+  </script>
+</body>
+</html>
