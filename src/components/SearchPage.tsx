@@ -97,7 +97,7 @@ export default function SearchPage({ onPostalCodeSelect }: SearchPageProps) {
               .catch(() => null),
           ]);
           const data = nomRes;
-          let addr: Record<string, string> = data?.address || {};
+          const addr: Record<string, string> = data?.address || {};
           if (data?.country_code && data.country_code !== 'za') {
             setLocationError('Location is not in South Africa.');
             return;
