@@ -18,7 +18,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const BASE_URL = process.env.SITE_URL || 'https://myzipcode.co.za';
+const BASE_URL = process.env.SITE_URL || 'https://mypostalcode.co.za';
 
 // Preview mode: only generate one province (faster dev). Use --preview or PREVIEW_PROVINCE env.
 const previewArg = process.argv.find((a) => a.startsWith('--preview'));
@@ -80,7 +80,7 @@ const FOOTER_HTML = `
       </div>
       <div class="footer-copyright">
         <strong>Copyright</strong><br>
-        © 2026 MyZipCode.co.za — All rights reserved.<br>
+        © 2026 MyPostalCode.co.za — All rights reserved.<br>
         Postal code data remains the property of their respective owners.
       </div>
     </div>
@@ -221,6 +221,8 @@ function layout(opts) {
   ${FOOTER_HTML}
   </div>
   <script>${PAGE_LOADER_SCRIPT}</script>
+  <script>window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };</script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
 </body>
 </html>`;
 }
@@ -757,7 +759,7 @@ const searchScript = `
         navigator.geolocation.getCurrentPosition(
           function(pos){
             var lat=pos.coords.latitude, lon=pos.coords.longitude;
-            var nomFetch = fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&addressdetails=1', { headers: { 'User-Agent': 'MyZipCode-co-za/1.0', 'Accept-Language': 'en' } }).then(function(r){ return r.json(); });
+            var nomFetch = fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&addressdetails=1', { headers: { 'User-Agent': 'MyPostalCode-co-za/1.0', 'Accept-Language': 'en' } }).then(function(r){ return r.json(); });
             var photonFetch = fetch('https://photon.komoot.io/reverse?lat='+lat+'&lon='+lon).then(function(r){ return r.json(); }).catch(function(){ return null; });
             Promise.all([nomFetch, photonFetch]).then(function(arr){
               locBtn.disabled = false;
@@ -814,7 +816,7 @@ ${sitemapUrls.map((u) => `  <url><loc>${BASE_URL}${u}</loc><changefreq>monthly</
 </urlset>`;
 writeFile(path.join(DIST_PATH, 'sitemap.xml'), sitemap);
 writeFile(
-  path.join(DIST_PATH, 'robots.txt'),
+  path.join(DIST_PATH, '.txt'),
   `User-agent: *
 Allow: /
 Sitemap: ${BASE_URL}/sitemap.xml

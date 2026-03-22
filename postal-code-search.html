@@ -649,7 +649,7 @@
           function (position) {
             lat = position.coords.latitude;
             lon = position.coords.longitude;
-            var nomFetch = fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&addressdetails=1', { headers: { 'Accept-Language': 'en', 'User-Agent': 'MyZipCode-co-za/1.0' } }).then(function (r) { return r.json(); });
+            var nomFetch = fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&addressdetails=1', { headers: { 'Accept-Language': 'en', 'User-Agent': 'MyPostalCode-co-za/1.0' } }).then(function (r) { return r.json(); });
             var photonFetch = fetch('https://photon.komoot.io/reverse?lat=' + lat + '&lon=' + lon).then(function (r) { return r.json(); }).catch(function () { return null; });
             Promise.all([nomFetch, photonFetch]).then(function (arr) {
               state.locationLoading = false;
@@ -856,7 +856,7 @@
       </div>
       <div class="footer-copyright">
         <strong>Copyright</strong><br>
-        © 2026 MyZipCode.co.za — All rights reserved.<br>
+        © 2026 MyPostalCode.co.za — All rights reserved.<br>
         Postal code data remains the property of their respective owners.
       </div>
     </div>

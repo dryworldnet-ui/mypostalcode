@@ -88,7 +88,7 @@ export default function SearchPage({ onPostalCodeSelect }: SearchPageProps) {
                 headers: {
                   Accept: 'application/json',
                   'Accept-Language': 'en',
-                  'User-Agent': 'MyZipCode-co-za/1.0',
+                  'User-Agent': 'MyPostalCode-co-za/1.0',
                 },
               }
             ).then((r) => r.json()),

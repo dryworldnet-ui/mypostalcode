@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import SearchPage from './components/SearchPage';
 const PostalCodeDetail = lazy(() => import('./components/PostalCodeDetail'));
 import { isSupabaseConfigured } from './lib/supabase';
@@ -83,6 +84,7 @@ function App() {
         </Suspense>
       )}
       </div>
+      <SpeedInsights />
     </div>
   );
 }
