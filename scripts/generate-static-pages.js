@@ -210,6 +210,13 @@ function layout(opts) {
     .bg-circle-23{right:-8%;top:10%;width:42vmin;height:42vmin}
     .bg-circle-24{left:8%;top:12%;width:30vmin;height:30vmin}
     .site-header,#app,.site-footer{position:relative;z-index:1}
+    /* Search result links - proper flex layout */
+    a.result-row-link{display:block;text-decoration:none;color:inherit;cursor:pointer}
+    a.result-row-link:hover{background:#f8fafc}
+    .result-row-inner{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;width:100%}
+    .result-row-left{min-width:0;flex:1}
+    .result-row-right{flex-shrink:0}
+    #searchResultsWrap .result-meta{margin:0;font-size:0.875rem;color:#475569}
   </style>
 </head>
 <body>
@@ -744,10 +751,12 @@ const searchScript = `
         var cityPart = r.city ? '<a href="/town/'+townSlug+'/" class="result-meta-link">'+escapeHtml(r.city)+'</a>' : '';
         var provPart = r.province ? '<a href="/province/'+provSlug+'/" class="result-meta-link">'+escapeHtml(r.province)+'</a>' : '';
         var meta = cityPart + (cityPart&&provPart ? ', ' : '') + provPart;
-        return '<a href="'+r.href+'" class="result-row" style="display:block;text-decoration:none;color:inherit;"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="result-area">'+escapeHtml(r.area)+'</div><p class="result-meta">'+meta+'</p></div><div class="result-code">'+escapeHtml(r.postal_code)+'</div></div></a>';
+        var areaDisplay = escapeHtml((r.area||'').trim()||'Area');
+        var codeDisplay = escapeHtml(r.postal_code||'');
+        return '<a href="'+r.href+'" class="result-row result-row-link"><div class="result-row-inner"><div class="result-row-left"><div class="result-area">'+areaDisplay+'</div><div class="result-meta">'+meta+'</div></div><div class="result-row-right"><span class="result-code">'+codeDisplay+'</span></div></div></a>';
       }).join('') + '</div>';
     }
-    fetch(DATA_SRC).then(function(res){ return res.json(); }).then(function(d){ DATA=d; });
+    fetch(DATA_SRC).then(function(res){ return res.json(); }).then(function(d){ DATA=d; var inp=document.getElementById('searchInput'); if(inp&&inp.value) renderResults(inp.value); });
     var inp = document.getElementById('searchInput');
     var locBtn = document.getElementById('btnLocation');
     var errEl = document.getElementById('locationError');
@@ -816,7 +825,7 @@ ${sitemapUrls.map((u) => `  <url><loc>${BASE_URL}${u}</loc><changefreq>monthly</
 </urlset>`;
 writeFile(path.join(DIST_PATH, 'sitemap.xml'), sitemap);
 writeFile(
-  path.join(DIST_PATH, '.txt'),
+  path.join(DIST_PATH, 'robots.txt'),
   `User-agent: *
 Allow: /
 Sitemap: ${BASE_URL}/sitemap.xml
