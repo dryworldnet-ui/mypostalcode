@@ -210,16 +210,18 @@ function layout(opts) {
     .bg-circle-23{right:-8%;top:10%;width:42vmin;height:42vmin}
     .bg-circle-24{left:8%;top:12%;width:30vmin;height:30vmin}
     .site-header,#app,.site-footer{position:relative;z-index:1}
-    /* Search suggestions: grid keeps area/meta left, code right (avoids flex space-between bugs) */
-    #searchResultsWrap{text-align:left}
+    /* Search suggestions: overlay so results don't shift page or background circles */
+    .search-dropdown-wrap{position:relative}
+    #searchResultsWrap{position:absolute;top:100%;left:0;right:0;z-index:50;margin-top:0.25rem;max-height:min(70vh,400px);overflow-y:auto;text-align:left}
+    #searchResultsWrap .card{box-shadow:0 10px 25px rgba(0,0,0,0.15)}
     #searchResultsWrap .card{text-align:left}
-    a.result-row-link{display:block;text-decoration:none;color:inherit;cursor:pointer;box-sizing:border-box}
+    a.result-row-link{display:block;text-decoration:none;color:inherit;cursor:pointer}
     a.result-row-link:hover{background:#f8fafc}
-    .result-row-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem 1.25rem;align-items:start;width:100%}
-    .result-row-left{min-width:0;text-align:left;overflow-wrap:anywhere}
-    .result-row-right{text-align:right;align-self:start}
-    #searchResultsWrap .result-code{display:inline-block;white-space:nowrap}
-    #searchResultsWrap .result-meta{margin:0;font-size:0.875rem;color:#475569}
+    .sr-table{width:100%;border-collapse:collapse;border-spacing:0;table-layout:fixed}
+    .sr-cell-left{padding-right:1rem;vertical-align:top;text-align:left;font-size:1.125rem;font-weight:600;color:#1e293b}
+    .sr-cell-left .sr-area{margin-bottom:0.25rem}
+    .sr-cell-left .sr-meta{font-size:0.875rem;font-weight:400;color:#475569}
+    .sr-cell-right{width:1%;white-space:nowrap;vertical-align:top;text-align:right;font-size:1.25rem;font-weight:700;color:#15803d}
   </style>
 </head>
 <body>
@@ -266,20 +268,22 @@ function generateHomePage(data) {
         </div>
       </div>
       <p class="text-slate-500 text-center" style="font-size:0.875rem;margin-top:0;margin-bottom:1rem">${data.length.toLocaleString()} postal codes across South Africa</p>
-      <div class="card mb-8">
-        <div class="search-box">
-          <div class="search-input-wrap">
-            <svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="searchInput" placeholder="Search by postal code, area, or city..." autocomplete="off" aria-label="Search postal codes">
+      <div class="search-dropdown-wrap">
+        <div class="card mb-8">
+          <div class="search-box">
+            <div class="search-input-wrap">
+              <svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" id="searchInput" placeholder="Search by postal code, area, or city..." autocomplete="off" aria-label="Search postal codes">
+            </div>
+            <button type="button" class="btn-location" id="btnLocation" title="Use my location" aria-label="Use my location">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="btn-location-text">Use location</span>
+            </button>
           </div>
-          <button type="button" class="btn-location" id="btnLocation" title="Use my location" aria-label="Use my location">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span class="btn-location-text">Use location</span>
-          </button>
+          <p class="text-amber-600" role="alert" id="locationError" style="display:none"></p>
         </div>
-        <p class="text-amber-600" role="alert" id="locationError" style="display:none"></p>
+        <div id="searchResultsWrap"></div>
       </div>
-      <div id="searchResultsWrap"></div>
       <h2 class="about-title" style="margin-top:2rem;margin-bottom:1rem">Browse by Province</h2>
       <div class="card">${provinceLinks}</div>
       <p class="text-slate-500" style="margin-top:1rem;font-size:0.9rem;line-height:1.5">Each province page can expand into districts, cities, suburbs, and individual postal codes.</p>
@@ -756,7 +760,7 @@ const searchScript = `
         var meta = cityPart + (cityPart&&provPart ? ', ' : '') + provPart;
         var areaDisplay = escapeHtml((r.area||'').trim()||'Area');
         var codeDisplay = escapeHtml(r.postal_code||'');
-        return '<a href="'+r.href+'" class="result-row result-row-link"><div class="result-row-inner"><div class="result-row-left"><div class="result-area">'+areaDisplay+'</div><div class="result-meta">'+meta+'</div></div><div class="result-row-right"><span class="result-code">'+codeDisplay+'</span></div></div></a>';
+        return '<a href="'+r.href+'" class="result-row result-row-link"><table class="sr-table" cellpadding="0" cellspacing="0"><tr><td class="sr-cell-left"><div class="sr-area">'+areaDisplay+'</div><div class="sr-meta">'+meta+'</div></td><td class="sr-cell-right"><span class="sr-code">'+codeDisplay+'</span></td></tr></table></a>';
       }).join('') + '</div>';
     }
     fetch(DATA_SRC).then(function(res){ return res.json(); }).then(function(d){ DATA=d; var inp=document.getElementById('searchInput'); if(inp&&inp.value) renderResults(inp.value); });
