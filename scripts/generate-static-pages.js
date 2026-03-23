@@ -217,11 +217,11 @@ function layout(opts) {
     #searchResultsWrap .card{text-align:left}
     a.result-row-link{display:block;text-decoration:none;color:inherit;cursor:pointer}
     a.result-row-link:hover{background:#f8fafc}
-    .sr-table{width:100%;border-collapse:collapse;border-spacing:0;table-layout:fixed}
+    .sr-table{width:100%;border-collapse:collapse;border-spacing:0;table-layout:auto}
     .sr-cell-left{padding-right:1rem;vertical-align:top;text-align:left;font-size:1.125rem;font-weight:600;color:#1e293b}
     .sr-cell-left .sr-area{margin-bottom:0.25rem}
     .sr-cell-left .sr-meta{font-size:0.875rem;font-weight:400;color:#475569}
-    .sr-cell-right{width:1%;white-space:nowrap;vertical-align:top;text-align:right;font-size:1.25rem;font-weight:700;color:#15803d}
+    .sr-cell-right{width:1%;min-width:3.5rem;white-space:nowrap;vertical-align:top;text-align:right;font-size:1.25rem;font-weight:700;color:#15803d}
   </style>
 </head>
 <body>
