@@ -210,12 +210,15 @@ function layout(opts) {
     .bg-circle-23{right:-8%;top:10%;width:42vmin;height:42vmin}
     .bg-circle-24{left:8%;top:12%;width:30vmin;height:30vmin}
     .site-header,#app,.site-footer{position:relative;z-index:1}
-    /* Search result links - proper flex layout */
-    a.result-row-link{display:block;text-decoration:none;color:inherit;cursor:pointer}
+    /* Search suggestions: grid keeps area/meta left, code right (avoids flex space-between bugs) */
+    #searchResultsWrap{text-align:left}
+    #searchResultsWrap .card{text-align:left}
+    a.result-row-link{display:block;text-decoration:none;color:inherit;cursor:pointer;box-sizing:border-box}
     a.result-row-link:hover{background:#f8fafc}
-    .result-row-inner{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;width:100%}
-    .result-row-left{min-width:0;flex:1}
-    .result-row-right{flex-shrink:0}
+    .result-row-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem 1.25rem;align-items:start;width:100%}
+    .result-row-left{min-width:0;text-align:left;overflow-wrap:anywhere}
+    .result-row-right{text-align:right;align-self:start}
+    #searchResultsWrap .result-code{display:inline-block;white-space:nowrap}
     #searchResultsWrap .result-meta{margin:0;font-size:0.875rem;color:#475569}
   </style>
 </head>
