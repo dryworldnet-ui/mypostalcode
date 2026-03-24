@@ -1,4 +1,12 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "header", "key": "host", "value": "mypostalcode.co.za" }],
+      "destination": "https://www.mypostalcode.co.za/$1",
+      "permanent": true
+    }
+  ]
 }

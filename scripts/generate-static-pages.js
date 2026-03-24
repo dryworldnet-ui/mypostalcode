@@ -18,7 +18,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const BASE_URL = process.env.SITE_URL || 'https://mypostalcode.co.za';
+const BASE_URL = process.env.SITE_URL || 'https://www.mypostalcode.co.za';
 
 // Preview mode: only generate one province (faster dev). Use --preview or PREVIEW_PROVINCE env.
 const previewArg = process.argv.find((a) => a.startsWith('--preview'));
@@ -150,6 +150,8 @@ function layout(opts) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="shortcut icon" href="/icon.png" />
+  <link rel="apple-touch-icon" href="/icon.png" />
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}" />
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
@@ -847,3 +849,5 @@ console.log('  - Town pages: /town/{town}/');
 console.log('  - Area pages: /town/{town}/{area}/');
 console.log('  - sitemap.xml for search engines');
 console.log('\nRun "npm run preview" or deploy dist/ to any static host.');
+
+
